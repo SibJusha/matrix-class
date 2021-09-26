@@ -195,7 +195,7 @@ public:
 };
 
 int main() {
-    int N, k, p;
+    int N, k, c;
     std::cin >> N >> k;
     int * a = new int[N];
     for (int i = 0; i < N; i++) {

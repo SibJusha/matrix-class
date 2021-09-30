@@ -55,10 +55,18 @@ public:
     square_matrix() : square_matrix(0) {}
 
     explicit square_matrix(int n) :
-            square_matrix(n, new int[n]) {
+            size(n),
+            array(new int*[n]) {
 
         for (int i = 0; i < n; i++) {
-            array[i][i] = 1;
+            array[i] = new int[n];
+            for (int j = 0; j < n; j++) {
+                if (j == i) {
+                    array[i][i] = 1;
+                    continue;
+                }
+                array[i][j] = 0;
+            }
         }
     }
 
@@ -69,9 +77,10 @@ public:
         delete[] array;
     }
 
-    square_matrix(const square_matrix& that) {
-        size = that.size;
-        array = new int*[size];
+    square_matrix(const square_matrix& that) :
+            size(that.size),
+            array(new int*[size]) {
+
         for (int i = 0; i < size; i++) {
             array[i] = new int[that.size];
             for (int j = 0; j < size; j++) {
@@ -87,13 +96,11 @@ public:
     }
 
     square_matrix& operator= (square_matrix that) {
-        if (this != &that) {
-            swap(*this, that);
-        }
+        swap(*this, that);
         return *this;
     }
 
-    square_matrix operator+(const square_matrix &that) const {
+    square_matrix operator+(const square_matrix& that) const {
         checkSize(that.size);
         square_matrix result(size);
         for (int i = 0; i < size; i++) {
@@ -115,7 +122,7 @@ public:
         return result;
     }
 
-    square_matrix operator*(const square_matrix &that) const {
+    square_matrix operator*(const square_matrix& that) const {
         checkSize(that.size);
         square_matrix result(size);
         for (int i = 0; i < size; i++) {
@@ -131,7 +138,7 @@ public:
         return result;
     }
 
-    bool operator==(const square_matrix &that) const {
+    bool operator==(const square_matrix& that) const {
         if (size != that.size) {
             return false;
         }
@@ -145,18 +152,11 @@ public:
         return true;
     }
 
-    bool operator!=(const square_matrix &that) const {
-        if (size != that.size) {
+    bool operator!=(const square_matrix& that) const {
+        if (*this == that) {
             return false;
         }
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
-                if (array[i][j] != that.array[i][j]) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return true;
     }
 
     square_matrix operator~() const {
@@ -195,7 +195,7 @@ public:
 };
 
 int main() {
-    int N, k, c;
+    int N, k;
     std::cin >> N >> k;
     int * a = new int[N];
     for (int i = 0; i < N; i++) {
@@ -204,8 +204,6 @@ int main() {
     square_matrix A(N), B(N), C(N), D(N), K(N, a);
     delete[] a;
     std::cin >> A >> B >> C >> D;
-    square_matrix res(N);
-    res = ((A + (B * (~C))) + K) * (~D);
-    std::cout << res;
+    std::cout << (A + B * ~C + K) * ~D;
     return 0;
 }

@@ -12,7 +12,7 @@ class square_matrix {
         }
     }
 
-    void transpose(square_matrix& that) const {
+    void transpose(const square_matrix& that) const {
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
                 that.array[i][j] = array[j][i];

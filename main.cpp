@@ -12,10 +12,10 @@ class square_matrix {
         }
     }
 
-    void transpose() {
+    void transpose(square_matrix& that) const {
         for (int i = 0; i < size; i++) {
-            for (int j = i + 1; j < size; j++) {
-                std::swap(array[i][j], array[j][i]);
+            for (int j = 0; j < size; j++) {
+                that.array[i][j] = array[j][i];
             }
         }
     }
@@ -146,11 +146,7 @@ public:
 
     square_matrix operator~() const {
         square_matrix that(size);
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
-                that.array[i][j] = array[j][i];
-            }
-        }
+        transpose(that);
         return that;
     }
 

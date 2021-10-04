@@ -145,8 +145,12 @@ public:
     }
 
     square_matrix operator~() const {
-        square_matrix that = *this;
-        that.transpose();
+        square_matrix that(size);
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                that.array[i][j] = array[j][i];
+            }
+        }
         return that;
     }
 

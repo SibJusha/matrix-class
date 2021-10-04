@@ -41,13 +41,11 @@ public:
             array(new int*[n]) {
 
         for (int i = 0; i < n; i++) {
-            array[i] = new int[n];
+            array[i] = new int[n]();
             for (int j = 0; j < n; j++) {
                 if (j == i) {
                     array[i][i] = a[i];
-                    continue;
                 }
-                array[i][j] = 0;
             }
         }
     }
@@ -59,13 +57,11 @@ public:
             array(new int*[n]) {
 
         for (int i = 0; i < n; i++) {
-            array[i] = new int[n];
+            array[i] = new int[n]();
             for (int j = 0; j < n; j++) {
                 if (j == i) {
                     array[i][i] = 1;
-                    continue;
                 }
-                array[i][j] = 0;
             }
         }
     }
@@ -153,10 +149,7 @@ public:
     }
 
     bool operator!=(const square_matrix& that) const {
-        if (*this == that) {
-            return false;
-        }
-        return true;
+        return !(*this == that);
     }
 
     square_matrix operator~() const {

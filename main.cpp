@@ -12,7 +12,7 @@ class square_matrix {
         }
     }
 
-    void transpose() const {
+    void transpose() {
         for (int i = 0; i < size; i++) {
             for (int j = i + 1; j < size; j++) {
                 std::swap(array[i][j], array[j][i]);
@@ -153,8 +153,9 @@ public:
     }
 
     square_matrix operator~() const {
-        transpose();
-        return *this;
+        square_matrix that = *this;
+        that.transpose();
+        return that;
     }
 
     friend std::istream& operator>> (std::istream& is, const square_matrix& that)

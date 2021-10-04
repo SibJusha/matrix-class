@@ -42,11 +42,7 @@ public:
 
         for (int i = 0; i < n; i++) {
             array[i] = new int[n]();
-            for (int j = 0; j < n; j++) {
-                if (j == i) {
-                    array[i][i] = a[i];
-                }
-            }
+            array[i][i] = a[i];
         }
     }
 
@@ -58,11 +54,7 @@ public:
 
         for (int i = 0; i < n; i++) {
             array[i] = new int[n]();
-            for (int j = 0; j < n; j++) {
-                if (j == i) {
-                    array[i][i] = 1;
-                }
-            }
+            array[i][i] = 1;
         }
     }
 

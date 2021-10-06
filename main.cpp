@@ -239,7 +239,7 @@ public:
 };
 
 
-int main() {/*
+int main() {
     int N, k;
     std::cin >> N >> k;
     int * a = new int[N];
@@ -249,11 +249,6 @@ int main() {/*
     square_matrix A(N), B(N), C(N), D(N), K(N, a);
     delete[] a;
     std::cin >> A >> B >> C >> D;
-    std::cout << (A + B * ~C + K) * ~D;*/
-    square_matrix a(3);
-    std::cin >> a;
-    a(0)[0] = 54;
-    a[2][2] = 43;
-    std::cout << a;
+    std::cout << (A + B * ~C + K) * ~D;
     return 0;
 }

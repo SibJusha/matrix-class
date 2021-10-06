@@ -1,6 +1,47 @@
 #include <iostream>
 #include <algorithm>
 
+class vector {
+    int size;
+    int ** array;
+
+public:
+
+    explicit vector(int n) :
+            size(n),
+            array(new int*[n]()) {}
+
+    vector (int n, int * a) :
+            size(n),
+            array(new int*[n])
+    {
+        for (int i = 0; i < n; i++) {
+            array[i] = &a[i];
+        }
+    }
+
+    vector (int n, int ** a, int j) :
+            size(n),
+            array(new int*[n])
+    {
+        for (int i = 0; i < n; i++) {
+            array[i] = &a[i][j];
+        }
+    }
+
+    ~vector() {
+        delete[] array;
+    }
+
+    int& operator[] (int i) const {
+        if (i >= size) {
+            std::cout << "i >= size of vector";
+            exit(-1);
+        }
+        return *array[i];
+    }
+};
+
 class square_matrix {
     int size;
     int ** array;
@@ -177,10 +218,28 @@ public:
         return minor;
     }
 
+    vector operator() (int column) const {
+        if (column >= size) {
+            std::cout << "i >= size of matrix";
+            exit(-1);
+        }
+        vector a(size, array, column);
+        return a;
+    }
+
+    vector operator[] (int row) const {
+        if (row >= size) {
+            std::cout << "i >= size of matrix";
+            exit(-1);
+        }
+        vector b(size, array[row]);
+        return b;
+    }
 
 };
 
-int main() {
+
+int main() {/*
     int N, k;
     std::cin >> N >> k;
     int * a = new int[N];
@@ -190,6 +249,11 @@ int main() {
     square_matrix A(N), B(N), C(N), D(N), K(N, a);
     delete[] a;
     std::cin >> A >> B >> C >> D;
-    std::cout << (A + B * ~C + K) * ~D;
+    std::cout << (A + B * ~C + K) * ~D;*/
+    square_matrix a(3);
+    std::cin >> a;
+    a(0)[0] = 54;
+    a[2][2] = 43;
+    std::cout << a;
     return 0;
 }

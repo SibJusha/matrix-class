@@ -1,48 +1,41 @@
 #include <iostream>
 #include <algorithm>
 
-class vector {
-    int size;
-    int ** array;
-
-public:
-
-    explicit vector(int n) :
-            size(n),
-            array(new int*[n]()) {}
-
-    vector (int n, int * a) :
-            size(n),
-            array(new int*[n])
-    {
-        for (int i = 0; i < n; i++) {
-            array[i] = &a[i];
-        }
-    }
-
-    vector (int n, int ** a, int j) :
-            size(n),
-            array(new int*[n])
-    {
-        for (int i = 0; i < n; i++) {
-            array[i] = &a[i][j];
-        }
-    }
-
-    ~vector() {
-        delete[] array;
-    }
-
-    int& operator[] (int i) const {
-        if (i >= size) {
-            std::cout << "i >= size of vector";
-            exit(-1);
-        }
-        return *array[i];
-    }
-};
-
 class square_matrix {
+    class vector {
+        int size;
+        int ** array;
+        friend class square_matrix;
+    public:
+        explicit vector (int n) :
+                size(n),
+                array(new int*[n])
+        {}
+
+        vector (const vector& that) :
+            size(that.size),
+            array(new int*[that.size])
+        {
+            for (int i = 0; i < size; i++) {
+                array[i] = that.array[i];
+            }
+        }
+
+        ~vector() {
+            delete[] array;
+        }
+
+        vector& operator= (vector that) = delete;
+
+        int& operator[] (int i) const {
+            if (i >= size) {
+                std::cout << "i >= size of vector";
+                exit(-1);
+            }
+            return *array[i];
+        }
+    };
+
     int size;
     int ** array;
 
@@ -223,7 +216,10 @@ public:
             std::cout << "i >= size of matrix";
             exit(-1);
         }
-        vector a(size, array, column);
+        vector a(size);
+        for (int i = 0; i < size; i++) {
+            a.array[i] = &array[i][column];
+        }
         return a;
     }
 
@@ -232,7 +228,10 @@ public:
             std::cout << "i >= size of matrix";
             exit(-1);
         }
-        vector b(size, array[row]);
+        vector b(size);
+        for (int i = 0; i < size; i++) {
+            b.array[i] = &array[row][i];
+        }
         return b;
     }
 

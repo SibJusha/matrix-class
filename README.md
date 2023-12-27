@@ -1,4 +1,4 @@
-# Matrix Class
+# Matrix Class (WIP)
 
 The Matrix Class is a C++ template class that provides functionality for working with matrices. It allows you to create, manipulate, and perform operations on matrices of different sizes and types.
 

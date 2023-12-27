@@ -22,6 +22,12 @@ tname
 matrix<T>::matrix(size_t _size) : matrix<T>::matrix(_size, _size) {}
 
 tname
+matrix<T>::matrix(size_t _rows_count, size_t _columns_count, std::function<T()> _det_algorithm) :
+    matrix(_rows_count, _columns_count),
+    det_algorithm(default_det_algorithm)
+{}
+
+tname
 matrix<T>::~matrix() 
 {
     for (int i = 0; i < rows_count; i++) {
@@ -34,17 +40,39 @@ tname
 matrix<T>::matrix(matrix const& that) :
             rows_count(that.rows_count),
             columns_count(that.columns_count),
-            data(new int*[size]) 
+            data(new int*[that.rows_count]) 
 {
-    for (int i = 0; i < size; i++) {
-        data[i] = new int[that.size];
-        for (int j = 0; j < size; j++) {
+    for (int i = 0; i < rows_count; i++) {
+        data[i] = new int[columns_count];
+        for (int j = 0; j < columns_count; j++) {
             data[i][j] = that.data[i][j];
         }
     }
 }
 
 //  Private member functions
+
+tname bool
+matrix<T>::check_size(matrix const& that) const
+{
+    if (that.rows_count != this->rows_count || 
+        that.columns_count != this->columns_count) 
+    {
+        return false;
+    }
+    return true;
+}
+
+tname bool
+matrix<T>::reverse_check_size(matrix const& that) const 
+{
+    if (that.rows_count != this->columns_count ||
+        that.columns_count != this->rows_count) 
+    {
+        return false;
+    }
+    return true;
+}
 
 tname void
 matrix<T>::transpose(matrix& that) const 
@@ -59,11 +87,11 @@ matrix<T>::transpose(matrix& that) const
 tname void
 matrix<T>::create_minor(matrix& future_minor, size_t row, size_t column) const 
 {
-    for (int i = 0, k = 0; k < size - 1; i++, k++) {
+    for (int i = 0, k = 0; k < rows_count - 1; i++, k++) {
         if (i == row) {
             i++;
         }
-        for (int j = 0, l = 0; l < size - 1; j++, l++) {
+        for (int j = 0, l = 0; l < columns_count - 1; j++, l++) {
             if (j == column) {
                 j++;
             }
@@ -104,13 +132,13 @@ matrix<T>::empty() const
 #endif
 
 tname bool
-matrix<T>::operator==(const matrix& that) const //  to remade
+matrix<T>::operator==(matrix const& that) const
 {
-    /* if (size != that.size) {
+    if (!check_size(that)) {
         return false;
-    } */
-    for (int i = 0; i < size; i++) {
-        for (int j = 0; j < size; j++) {
+    }
+    for (int i = 0; i < rows_count; i++) {
+        for (int j = 0; j < columns_count; j++) {
             if (data[i][j] != that.data[i][j]) {
                 return false;
             }
@@ -128,13 +156,21 @@ matrix<T>::operator!=(const matrix& that) const
 }
 
 #if __cplusplus >= 201703L
-tname constexpr int32_t 
+tname constexpr T
 matrix<T>::det() const 
 {
-
+    if (!det_algorithm) {
+        throw std::runtime_error("Det() algorithm is not set for matrix");
+    }
+    if (det_is_calculated) { 
+        return determinant;
+    }
+    T det = det_algorithm();
+    determinant = det;
+    return det;
 }
 #elif __cplusplus >= 201103L
-tname int32_t 
+tname T
 matrix<T>::det() const 
 {
 
@@ -144,8 +180,10 @@ matrix<T>::det() const
 tname matrix<T> 
 matrix<T>::operator+(matrix const& that) const 
 {
-    //check_size(that.size);
-    matrix result(size);
+    if (!check_size(that)) {
+        throw std::runtime_error("Sum of different size matrices");
+    }
+    matrix result(size); // rewrite
     for (int i = 0; i < size; i++) {
         for (int j = 0; j < size; j++) {
             result.data[i][j] = data[i][j] + that.data[i][j];
@@ -157,7 +195,9 @@ matrix<T>::operator+(matrix const& that) const
 tname matrix<T>
 matrix<T>::operator-(matrix const& that) const 
 {
-    //check_size(that.size);
+    if (!check_size(that)) {
+        throw std::exception("Substraction of different size matrices");
+    }
     matrix result(size);
     for (int i = 0; i < size; i++) {
         for (int j = 0; j < size; j++) {
@@ -170,11 +210,10 @@ matrix<T>::operator-(matrix const& that) const
 tname matrix<T>
 matrix<T>::operator*(const matrix& that) const 
 {
-    //check_size(that.size);
-    matrix result(size);
-    for (int i = 0; i < size; i++) {
-        result.data[i][i] = 0;
+    if (!reverse_check_size(that)) {
+        throw std::exception("Multiplication cannot be done: not fitting sizes");
     }
+    matrix result();
     for (int i = 0; i < size; i++) {
         for (int j = 0; j < size; j++) {
             for (int k = 0; k < size; k++) {

@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <stdexcept>
+#include <functional>
 
 /*
 class vector {
@@ -47,22 +48,24 @@ public:
 template<typename T>
 class matrix {
 
-    size_t          rows_count;
-    size_t          columns_count;
-    size_t          r_reserved;
-    size_t          c_reserved;
-    T**             data;
+    size_t              rows_count;
+    size_t              columns_count;
+    size_t              r_reserved;
+    size_t              c_reserved;
+    T**                 data;
+    T                   determinant;
+    bool                det_is_calculated   = false;
+    std::function<T()>  det_algorithm       = nullptr;
     //friend class  vector; vector is N x 1 matrix
 
-/*  Maybe make two funcs?
+    T default_det_algorithm() const;
 
-    void check_size(const size_t& that_size) const {
-        if (size != that_size) {
-            throw std::length_error("Matrices are of different sizes");
-            exit(-1);
-        }
-    }
- */
+    T det_Strassen_algorithm() const;
+
+    bool check_size(matrix const& that) const;
+
+    bool reverse_check_size(matrix const& that) const;
+
     void transpose(matrix& that) const;
 
     void create_minor(matrix& future_minor, size_t row, size_t column) const;
@@ -70,6 +73,8 @@ class matrix {
 public:
 
     matrix(size_t _rows_count, size_t _columns_count);
+
+    matrix(size_t _rows_count, size_t _columns_count, std::function<T()> _det_algorithm);
 
     matrix();
 
@@ -119,23 +124,25 @@ public:
 
 // Compare operators (members)
 
-    bool operator==(const matrix& that) const;
+    bool operator==(matrix const& that) const;
 
-    bool operator!=(const matrix& that) const; //constexpr?
+    bool operator!=(matrix const& that) const; //constexpr?
+
+    bool is_reversible() const;
 
 //  Operators (?)
 
     #if __cplusplus >= 201703L
-    constexpr int32_t det() const;
+    constexpr T det() const;
     #elif __cplusplus >= 201103L
-    int32_t det() const;
+    T det() const;
     #endif
 
     matrix operator+(matrix const& that) const;
 
-    matrix operator- (const matrix& that) const;
+    matrix operator- (matrix const& that) const;
 
-    matrix operator*(const matrix& that) const;
+    matrix operator*(matrix const& that) const;
 
     matrix operator~() const;
 

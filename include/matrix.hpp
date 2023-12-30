@@ -48,19 +48,20 @@ public:
 template<typename T>
 class matrix {
 
-    size_t              rows_count;
-    size_t              columns_count;
-    size_t              r_reserved;
-    size_t              c_reserved;
-    T**                 data;
-    T                   determinant;
-    bool                det_is_calculated   = false;
-    std::function<T()>  det_algorithm       = nullptr;
+    size_t                  rows_count;
+    size_t                  columns_count;
+    size_t                  r_reserved;
+    size_t                  c_reserved;
+    T*                      data;
+    double                  determinant;
+    bool                    det_is_calculated   = false;
+    std::function<double()> det_algorithm       = nullptr;
     //friend class  vector; vector is N x 1 matrix
 
-    T default_det_algorithm() const;
+    double default_det_algorithm() const;
 
-    T det_Strassen_algorithm() const;
+    /* WIP Possible algorithm for very large matrices*/
+    double det_Strassen_algorithm() const;
 
     bool check_size(matrix const& that) const;
 
@@ -72,9 +73,11 @@ class matrix {
 
 public:
 
+    // Make compile-time constructor for static matrix
+
     matrix(size_t _rows_count, size_t _columns_count);
 
-    matrix(size_t _rows_count, size_t _columns_count, std::function<T()> _det_algorithm);
+    matrix(size_t _rows_count, size_t _columns_count, std::function<double()> _det_algorithm);
 
     matrix();
 
@@ -130,13 +133,21 @@ public:
 
     bool is_reversible() const;
 
+    #if __cplusplus >= 201703L
+    constexpr bool is_square() const {
+        return rows_count == columns_count;
+    }
+    #else
+    bool is_square() const {
+        return rows_count == columns_count;
+    }
+    #endif
+
 //  Operators (?)
 
-    #if __cplusplus >= 201703L
-    constexpr T det() const;
-    #elif __cplusplus >= 201103L
-    T det() const;
-    #endif
+    double det();
+
+    double det() const;
 
     matrix operator+(matrix const& that) const;
 
@@ -150,11 +161,11 @@ public:
 
     friend std::ostream& operator<< (std::ostream& os, matrix const& that);
 
-    matrix operator() (int row, int column) const;
+    matrix operator() (size_t row, size_t column) const;
     
-    vector operator() (int column);
+    vector operator() (size_t column);
 
-    vector operator[] (int row);
+    vector operator[] (size_t row);
 
 };
 /*

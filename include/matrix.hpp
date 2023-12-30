@@ -53,8 +53,8 @@ class matrix {
     size_t                  r_reserved;
     size_t                  c_reserved;
     T*                      data;
-    double                  determinant;
-    bool                    det_is_calculated   = false;
+    mutable double          determinant;
+    mutable bool            det_is_calculated   = false;
     std::function<double()> det_algorithm       = nullptr;
     //friend class  vector; vector is N x 1 matrix
 
@@ -144,8 +144,6 @@ public:
     #endif
 
 //  Operators (?)
-
-    double det();
 
     double det() const;
 

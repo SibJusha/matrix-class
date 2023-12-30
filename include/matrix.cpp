@@ -151,7 +151,7 @@ matrix<T>::operator!=(const matrix& that) const
 }
 
 tname double
-matrix<T>::det()
+matrix<T>::det() const
 {
     if (!is_square()) {
         throw std::runtime_error("det() is only for square matrices");
@@ -162,20 +162,8 @@ matrix<T>::det()
     if (det_is_calculated) { 
         return determinant;
     }
-    double det = det_algorithm();
-    determinant = det; // to do smth with const matrix, mb calculate det() of const M while creating it
-    return det;
-}
-
-tname double
-matrix<T>::det() const 
-{
-    if (!is_square()) {
-        throw std::runtime_error("det() is only for square matrices");
-    }
-    if (!det_is_calculated) {
-        throw std::runtime_error("DEBUG: det() for const matrix must be calculated on construction");
-    }
+    determinant = det_algorithm();
+    det_is_calculated = true;
     return determinant;
 }
 

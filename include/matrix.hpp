@@ -46,16 +46,19 @@ public:
 */
 
 template<typename T>
+class vector {};
+
+template<typename T>
 class matrix {
 
-    size_t                  rows_count;
-    size_t                  columns_count;
-    size_t                  r_reserved;
-    size_t                  c_reserved;
-    T*                      data;
-    mutable double          determinant;
-    mutable bool            det_is_calculated   = false;
-    std::function<double()> det_algorithm       = nullptr;
+    size_t                      rows_count;
+    size_t                      columns_count;
+    size_t                      r_reserved;
+    size_t                      c_reserved;
+    T*                          data;
+    mutable double              determinant;
+    mutable bool                det_is_calculated   = false;
+    std::function<double()>     det_algorithm       = nullptr;
     //friend class  vector; vector is N x 1 matrix
 
     double default_det_algorithm() const;
@@ -80,6 +83,9 @@ public:
     matrix(size_t _rows_count, size_t _columns_count, std::function<double()> _det_algorithm);
 
     matrix();
+
+    /* Constructor for square diagonal matrix */
+    matrix(size_t used_length, const int * array);
 
 /*  Maybe for square matrices 
     matrix(int n, const int * a):
@@ -159,13 +165,20 @@ public:
 
     friend std::ostream& operator<< (std::ostream& os, matrix const& that);
 
-    matrix operator() (size_t row, size_t column) const;
+    /*  Get the element(row, column) from const matrix */
+    const T operator() (size_t row, size_t column) const;
+
+    /*  Get the non-const reference to the element(row, column) from non-const matrix */
+    T& operator() (size_t row, size_t column);
     
-    vector operator() (size_t column);
+    vector<T> operator() (size_t column);
 
-    vector operator[] (size_t row);
+    vector<T> operator[] (size_t row);
 
+    matrix<T> get_minor (size_t row_to_delete, size_t column_to_delete) const;
 };
+
+
 /*
 class vector {
 

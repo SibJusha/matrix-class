@@ -205,10 +205,10 @@ matrix<T>::operator*(matrix const& that) const
     if (!reverse_check_size(that)) {
         throw std::runtime_error("Multiplication cannot be done: not fitting sizes");
     }
-    matrix result();
+    matrix result;
     for (int i = 0; i < rows_count; i++) {
         for (int j = 0; j < columns_count; j++) {
-            for (int k = 0; k < size; k++) {            //? rework
+            for (int k = 0; k < columns_count; k++) {            //?    rework done, check is needed
                 result.data[i * columns_count + j] += data[i * columns_count + k] * 
                                                     that.data[k * columns_count + j];
             }
@@ -248,11 +248,31 @@ operator<<(std::ostream& os, matrix<T> const& that)
     return os;
 }
 
-tname matrix<T>
-matrix<T>::operator()(size_t row, size_t column) const 
+tname const T
+matrix<T>::operator()(size_t row, size_t column) const
 {
-    matrix<T> minor(rows_count - 1, columns_count - 1);
-    create_minor(minor, row, column);
-    return minor;
+    if (row >= 0 && row < rows_count && column >= 0 && column < columns_count) {
+        const T element = data[row * columns_count + column];
+        return element;
+    }
+    else {
+        throw std::runtime_error("Cannot return element which is out of bounds");
+    }
 }
 
+tname T&
+matrix<T>::operator()(size_t row, size_t column)
+{
+    if (row >= 0 && row < rows_count && column >= 0 && column < columns_count) {
+        return data[row * columns_count + column];  
+    }
+    else {
+        throw std::runtime_error("Cannot return element which is out of bounds");
+    }
+}
+
+tname matrix<T>
+matrix<T>::get_minor(size_t row_to_delete, size_t column_to_delete) const 
+{
+
+}

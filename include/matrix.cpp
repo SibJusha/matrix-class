@@ -1,5 +1,6 @@
 #include "matrix.hpp"
-#include <iomanip>
+//#include <iomanip>
+#include <iostream>
 
 #define tname template <typename T>
 
@@ -274,5 +275,43 @@ matrix<T>::operator()(size_t row, size_t column)
 tname matrix<T>
 matrix<T>::get_minor(size_t row_to_delete, size_t column_to_delete) const 
 {
+    matrix future_minor(rows_count - 1, columns_count - 1);
+    for (int i = 0, k = 0; k < rows_count - 1; i++, k++) {
+        if (i == row_to_delete) {
+            i++;
+        }
+        for (int j = 0, l = 0; l < columns_count - 1; j++, l++) {
+            if (j == column_to_delete) {
+                j++;
+            }
+            future_minor.data[k * columns_count + l] = data[i * columns_count + j];
+        }
+    }
+    return future_minor;
+}
 
+tname T*
+matrix<T>::operator()(size_t column) 
+{
+    if (column >= 0 && column < columns_count) {
+        T* result_col = new T[rows_count];
+        for (int i = 0; i < rows_count; i++) {
+            result_col[i] = data[i * columns_count + column];
+        }
+        return result_col;
+    }
+    else {
+        throw std::runtime_error("Cannot return column which is out of bounds");
+    }
+}
+
+tname T*
+matrix<T>::operator[](size_t row) 
+{
+    if (row >= 0 && row < rows_count) {
+        return &data[row * columns_count];
+    }
+    else {
+        throw std::runtime_error("Cannot return row which is out of bounds");
+    }
 }

@@ -1,8 +1,14 @@
 # Project exclude paths
 /cmake-build-debug/
 
+# build files
+build
+
 # vscode
 .vscode
+
+# main
+main.*
 
 # ide
 .idea

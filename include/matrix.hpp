@@ -46,9 +46,6 @@ public:
 */
 
 template<typename T>
-class vector {};
-
-template<typename T>
 class matrix {
 
     size_t                      rows_count;
@@ -65,13 +62,9 @@ class matrix {
 
     /* WIP Possible algorithm for very large matrices*/
     double det_Strassen_algorithm() const;
-
     bool check_size(matrix const& that) const;
-
     bool reverse_check_size(matrix const& that) const;
-
     void transpose(matrix& that) const;
-
     void create_minor(matrix& future_minor, size_t row, size_t column) const;
 
 public:
@@ -79,34 +72,15 @@ public:
     // Make compile-time constructor for static matrix
 
     matrix(size_t _rows_count, size_t _columns_count);
-
     matrix(size_t _rows_count, size_t _columns_count, std::function<double()> _det_algorithm);
-
     matrix();
-
     /* Constructor for square diagonal matrix */
     matrix(size_t used_length, const int * array);
-
-/*  Maybe for square matrices 
-    matrix(int n, const int * a):
-            size(n),
-            data(new int*[n]) {
-
-        for (int i = 0; i < n; i++) {
-            data[i] = new int[n]();
-            data[i][i] = a[i];
-        }
-    }
- */
-
     matrix(size_t n);
-
     ~matrix();
 
     matrix(matrix const& that);
-
     friend void swap(matrix& a, matrix& b);
-
     matrix& operator=(matrix that);
 
 //  Capacity 
@@ -134,9 +108,7 @@ public:
 // Compare operators (members)
 
     bool operator==(matrix const& that) const;
-
     bool operator!=(matrix const& that) const; //constexpr?
-
     bool is_reversible() const;
 
     #if __cplusplus >= 201703L
@@ -152,29 +124,23 @@ public:
 //  Operators (?)
 
     double det() const;
-
     matrix operator+(matrix const& that) const;
-
     matrix operator- (matrix const& that) const;
-
     matrix operator*(matrix const& that) const;
-
+    /*  Transpose this matrix */
     matrix operator~() const;
-
     friend std::istream& operator>> (std::istream& is, matrix const& that);
-
     friend std::ostream& operator<< (std::ostream& os, matrix const& that);
-
     /*  Get the element(row, column) from const matrix */
     const T operator() (size_t row, size_t column) const;
-
     /*  Get the non-const reference to the element(row, column) from non-const matrix */
     T& operator() (size_t row, size_t column);
-    
-    vector<T> operator() (size_t column);
-
-    vector<T> operator[] (size_t row);
-
+    /*  Returns column as T* type.
+    *   It is highly preferable to wrap it by smart pointer */
+    T* operator() (size_t column);
+    /*  Returns row as T* type.
+    *   It is highly preferable to wrap it by smart pointer */
+    T* operator[] (size_t row);
     matrix<T> get_minor (size_t row_to_delete, size_t column_to_delete) const;
 };
 

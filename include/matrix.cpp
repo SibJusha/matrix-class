@@ -3,6 +3,7 @@
 #include <cassert>
 #include <functional>
 #include <iostream>
+#include <memory>
 
 #define tname template <typename T, typename Allocator>
 
@@ -14,7 +15,7 @@ matrix<T, Allocator>::matrix(allocator_type const& alloc, std::function<double()
 {}
 
 tname
-matrix<T, Allocator>::matrix(size_type const& _rows_count, size_type const& _columns_count, value_type const& value, 
+matrix<T, Allocator>::matrix(size_type const& _rows_count, size_type const& _columns_count, const_reference value, 
         const allocator_type& alloc, std::function<double()> const& _det_algorithm) :
     m_alloc(alloc), m_data(nullptr),  rows_count(_rows_count), columns_count(_columns_count),
     det_algorithm(_det_algorithm)
@@ -33,7 +34,7 @@ matrix<T, Allocator>::matrix(size_type const& _rows_count, size_type const& _col
 
 #if __cplusplus >= 201103L
     for (size_type i = 0; i < rows_count * columns_count; ++i) {
-        m_data = std::move(value);
+        m_data[i] = std::move(value);
     }
 #endif
 
@@ -46,7 +47,12 @@ matrix<T, Allocator>::matrix(size_type const& _size, const Allocator& alloc) : m
 tname
 matrix<T, Allocator>::~matrix() 
 {
-    
+#if __cplusplus >= 201703L
+    std::destroy_n(m_data, m_capacity);
+#else
+    m_alloc.destroy(m_data);
+#endif
+    m_alloc.deallocate(m_data, m_capacity);
 }
 
 tname 

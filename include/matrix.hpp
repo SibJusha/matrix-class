@@ -53,11 +53,14 @@ public:
     typedef T value_type;
     typedef Allocator allocator_type;
     typedef std::size_t size_type;
+    typedef std::ptrdiff_t difference_type;
+    typedef value_type& reference;
+    typedef value_type const& const_reference;
 
 private:
 
     allocator_type              m_alloc;
-    value_type*                 m_data;
+    value_type*                 m_data;         //use std::alloc_traits::pointer?
     size_type                   rows_count;
     size_type                   columns_count;
     size_type                   m_capacity;     // fill matrix free bytes
@@ -73,13 +76,15 @@ private:
     void transpose(matrix& that) const;
     void create_minor(matrix& future_minor, size_type row, size_type column) const;
 
+    //void _m_deallocate(value_type* p, size_type n); 
+
 public:
 
     // Make compile-time constructor for static matrix
 
     matrix(allocator_type const& alloc = allocator_type(), std::function<double()> const& _det_algorithm = default_det_algorithm);
     matrix(size_type const& n, allocator_type const& alloc = allocator_type());
-    matrix(size_type const& _rows_count, size_type const& _columns_count, value_type const& value = value_type(),
+    matrix(size_type const& _rows_count, size_type const& _columns_count, const_reference value = value_type(),
         allocator_type const& alloc = allocator_type(), std::function<double()> const& _det_algorithm = default_det_algorithm);
     /* Constructor for square diagonal matrix */
     matrix(size_type const& used_length, const value_type* array, std::function<double()> const& _det_algorithm = default_det_algorithm);
@@ -140,15 +145,15 @@ public:
     friend std::istream& operator>> (std::istream& is, matrix const& that);
     friend std::ostream& operator<< (std::ostream& os, matrix const& that);
     /*  Get a copy of the element(row, column) from const matrix */
-    const T operator() (size_type const& row, size_type const& column) const;
+    const value_type operator() (size_type const& row, size_type const& column) const;
     /*  Get the non-const reference to the element(row, column) from non-const matrix */
-    T& operator() (size_type const& row, size_type const& column);
+    reference operator() (size_type const& row, size_type const& column);
     /*  Returns column as T* type.
     *   It is highly preferable to wrap it in smart pointer */
-    T* operator() (size_type const& column);
+    value_type* operator() (size_type const& column);
     /*  Returns row as T* type.
     *   It is highly preferable to wrap it in smart pointer */
-    T* operator[] (size_type const& row);
+    value_type* operator[] (size_type const& row);
     matrix<T, Allocator> get_minor (size_type const& row_to_delete, size_type const& column_to_delete) const;
 };
 

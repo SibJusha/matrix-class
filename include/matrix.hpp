@@ -2,6 +2,7 @@
 #define __MATRIX_H__
 
 #include <algorithm>
+#include <cstddef>
 #include <stdexcept>
 #include <functional>
 
@@ -45,45 +46,50 @@ public:
 }
 */
 
-template<typename T>
+template< typename T, typename Allocator = std::allocator<T> >
 class matrix {
+public:
 
-    size_t                      rows_count;
-    size_t                      columns_count;
-    size_t                      r_reserved;
-    size_t                      c_reserved;
-    T*                          data;
+    typedef T value_type;
+    typedef Allocator allocator_type;
+    typedef std::size_t size_type;
+
+private:
+
+    allocator_type              m_alloc;
+    value_type*                 m_data;
+    size_type                   rows_count;
+    size_type                   columns_count;
+    size_type                   m_capacity;     // fill matrix free bytes
     mutable double              determinant;
     mutable bool                det_is_calculated   = false;
     std::function<double()>     det_algorithm       = nullptr;
-    //friend class  vector; vector is N x 1 matrix
 
-    double default_det_algorithm() const;
-
+    static double default_det_algorithm();
     /* WIP Possible algorithm for very large matrices*/
-    double det_Strassen_algorithm() const;
+    static double det_Strassen_algorithm();
     bool check_size(matrix const& that) const;
     bool reverse_check_size(matrix const& that) const;
     void transpose(matrix& that) const;
-    void create_minor(matrix& future_minor, size_t row, size_t column) const;
+    void create_minor(matrix& future_minor, size_type row, size_type column) const;
 
 public:
 
     // Make compile-time constructor for static matrix
 
-    matrix(size_t _rows_count, size_t _columns_count);
-    matrix(size_t _rows_count, size_t _columns_count, std::function<double()> _det_algorithm);
-    matrix();
+    matrix(allocator_type const& alloc = allocator_type(), std::function<double()> const& _det_algorithm = default_det_algorithm);
+    matrix(size_type const& n, allocator_type const& alloc = allocator_type());
+    matrix(size_type const& _rows_count, size_type const& _columns_count, value_type const& value = value_type(),
+        allocator_type const& alloc = allocator_type(), std::function<double()> const& _det_algorithm = default_det_algorithm);
     /* Constructor for square diagonal matrix */
-    matrix(size_t used_length, const int * array);
-    matrix(size_t n);
+    matrix(size_type const& used_length, const value_type* array, std::function<double()> const& _det_algorithm = default_det_algorithm);
     ~matrix();
 
     matrix(matrix const& that);
-    friend void swap(matrix& a, matrix& b);
+    friend void swap(matrix& lhs, matrix& rhs);
     matrix& operator=(matrix that);
 
-//  Capacity 
+//  Capacity && getters
 
     #if __cplusplus >= 201703L
     [[nodiscard]] constexpr bool empty() const noexcept;  
@@ -92,16 +98,18 @@ public:
     #endif
 
     #if __cplusplus >= 201103L
-    constexpr std::size_t size() const noexcept;    
+    constexpr size_type size() const noexcept;    
     #else 
-    std::size_t size() const;
+    size_type size() const;
     #endif
 
     #if __cplusplus >= 201703L
-    constexpr std::size_t capacity() const noexcept;
+    constexpr size_type capacity() const noexcept;
     #else
-    std::size_t capacity() const;
+    size_type capacity() const;
     #endif
+
+    allocator_type get_allocator() const;
 
 //  Modifiers
 
@@ -131,17 +139,17 @@ public:
     matrix operator~() const;
     friend std::istream& operator>> (std::istream& is, matrix const& that);
     friend std::ostream& operator<< (std::ostream& os, matrix const& that);
-    /*  Get the element(row, column) from const matrix */
-    const T operator() (size_t row, size_t column) const;
+    /*  Get a copy of the element(row, column) from const matrix */
+    const T operator() (size_type const& row, size_type const& column) const;
     /*  Get the non-const reference to the element(row, column) from non-const matrix */
-    T& operator() (size_t row, size_t column);
+    T& operator() (size_type const& row, size_type const& column);
     /*  Returns column as T* type.
-    *   It is highly preferable to wrap it by smart pointer */
-    T* operator() (size_t column);
+    *   It is highly preferable to wrap it in smart pointer */
+    T* operator() (size_type const& column);
     /*  Returns row as T* type.
-    *   It is highly preferable to wrap it by smart pointer */
-    T* operator[] (size_t row);
-    matrix<T> get_minor (size_t row_to_delete, size_t column_to_delete) const;
+    *   It is highly preferable to wrap it in smart pointer */
+    T* operator[] (size_type const& row);
+    matrix<T, Allocator> get_minor (size_type const& row_to_delete, size_type const& column_to_delete) const;
 };
 
 

@@ -1,10 +1,8 @@
-#ifndef __MATRIX_H__
-#define __MATRIX_H__
+#pragma once
 
-#include <algorithm>
 #include <cstddef>
-#include <stdexcept>
 #include <functional>
+#include <iostream>
 
 /*
 class vector {
@@ -63,6 +61,7 @@ private:
     value_type*                 m_data;         //use std::alloc_traits::pointer?
     size_type                   rows_count;
     size_type                   columns_count;
+    size_type                   m_size;
     size_type                   m_capacity;     // fill matrix free bytes
     mutable double              determinant;
     mutable bool                det_is_calculated   = false;
@@ -70,30 +69,33 @@ private:
 
     static double default_det_algorithm();
     /* WIP Possible algorithm for very large matrices*/
-    static double det_Strassen_algorithm();
+    //static double det_Strassen_algorithm();
     bool check_size(matrix const& that) const;
     bool reverse_check_size(matrix const& that) const;
     void transpose(matrix& that) const;
     void create_minor(matrix& future_minor, size_type row, size_type column) const;
-
     //void _m_deallocate(value_type* p, size_type n); 
 
 public:
 
     // Make compile-time constructor for static matrix
 
-    matrix(allocator_type const& alloc = allocator_type(), std::function<double()> const& _det_algorithm = default_det_algorithm);
-    matrix(size_type const& n, allocator_type const& alloc = allocator_type());
+    matrix(allocator_type const& alloc = allocator_type(), std::function<double()> _det_algorithm = default_det_algorithm);
+    matrix(size_type const& n, allocator_type const& alloc = allocator_type(), 
+                                                        std::function<double()> _det_algorithm = default_det_algorithm);
     matrix(size_type const& _rows_count, size_type const& _columns_count, const_reference value = value_type(),
-        allocator_type const& alloc = allocator_type(), std::function<double()> const& _det_algorithm = default_det_algorithm);
+        allocator_type const& alloc = allocator_type() , std::function<double()>  _det_algorithm = default_det_algorithm);
     /* Constructor for square diagonal matrix */
-    matrix(size_type const& used_length, const value_type* array, std::function<double()> const& _det_algorithm = default_det_algorithm);
+    matrix(size_type const& used_length, const value_type* array, std::function<double()> _det_algorithm = default_det_algorithm);
     ~matrix();
 
     matrix(matrix const& that);
-    friend void swap(matrix& lhs, matrix& rhs);
-    matrix& operator=(matrix that);
 
+	template<typename U, typename Alloc>
+    friend void swap(matrix<U, Alloc>& lhs, matrix<U, Alloc>& rhs);
+
+    matrix& operator=(matrix const& that);
+    
 //  Capacity && getters
 
     #if __cplusplus >= 201703L
@@ -142,8 +144,13 @@ public:
     matrix operator*(matrix const& that) const;
     /*  Transpose this matrix */
     matrix operator~() const;
-    friend std::istream& operator>> (std::istream& is, matrix const& that);
-    friend std::ostream& operator<< (std::ostream& os, matrix const& that);
+    
+    template<typename U, typename Alloc>
+    friend std::istream& operator>> (std::istream& is, matrix<U, Alloc>& that);
+
+    template<typename U, typename Alloc>
+    friend std::ostream& operator<< (std::ostream& os, matrix<U, Alloc> const& that);
+    
     /*  Get a copy of the element(row, column) from const matrix */
     const value_type operator() (size_type const& row, size_type const& column) const;
     /*  Get the non-const reference to the element(row, column) from non-const matrix */
@@ -192,4 +199,3 @@ vector matrix::operator[] (int row) {
     }
     return vector(true, row, *this);
 }*/
-#endif // __MATRIX_H__

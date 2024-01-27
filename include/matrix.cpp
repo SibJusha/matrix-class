@@ -1,48 +1,53 @@
 #include "matrix.hpp"
-//#include <iomanip>
 #include <cassert>
-#include <functional>
 #include <iostream>
 #include <memory>
+#include <sstream>
 
 #define tname template <typename T, typename Allocator>
 
 //  Constructors, destructors
 
+// dummy function
+tname double 
+matrix<T, Allocator>::default_det_algorithm() {
+    return 666;
+}
+
 tname
-matrix<T, Allocator>::matrix(allocator_type const& alloc, std::function<double()> const& _det_algorithm) : 
-    m_alloc(alloc), m_data(nullptr), rows_count(0), columns_count(0), det_algorithm(_det_algorithm) 
-{}
+matrix<T, Allocator>::matrix(allocator_type const& alloc, std::function<double()> _det_algorithm) : 
+    m_alloc(alloc), m_data(nullptr), rows_count(0), columns_count(0), m_capacity(0), m_size(0)
+{
+    det_algorithm = std::bind(_det_algorithm);
+}
 
 tname
 matrix<T, Allocator>::matrix(size_type const& _rows_count, size_type const& _columns_count, const_reference value, 
-        const allocator_type& alloc, std::function<double()> const& _det_algorithm) :
-    m_alloc(alloc), m_data(nullptr),  rows_count(_rows_count), columns_count(_columns_count),
-    det_algorithm(_det_algorithm)
+        const allocator_type& alloc , std::function<double()> _det_algorithm) :
+    m_alloc(alloc), m_data(nullptr), rows_count(_rows_count), columns_count(_columns_count)
 {
     assert(rows_count > 0 && columns_count > 0);
 
-    m_data = m_alloc.allocate(rows_count * columns_count);
+    m_size = m_capacity = rows_count * columns_count;
+    m_data = m_alloc.allocate(m_capacity);
 
 #if __cplusplus >= 202002L
     m_data = std::construct_at(m_data);
 #elif __cplusplus >= 201103L
     m_alloc.construct(m_data);    
 #else
-    m_alloc.construct(m_data, value);
+    m_alloc.construct(m_data);
 #endif
-
-#if __cplusplus >= 201103L
-    for (size_type i = 0; i < rows_count * columns_count; ++i) {
+	for (size_type i = 0; i < m_capacity; ++i)  
         m_data[i] = std::move(value);
-    }
-#endif
 
-    m_capacity = rows_count * columns_count;
+    det_algorithm = std::bind(_det_algorithm);
+    std::cout << "Matrix is created\n";
 }
 
 tname
-matrix<T, Allocator>::matrix(size_type const& _size, const Allocator& alloc) : matrix<T>::matrix(_size, _size) {}
+matrix<T, Allocator>::matrix(size_type const& _size, const Allocator& alloc, std::function<double()> _det_algorithm) : 
+    matrix<T>::matrix(_size, _size, alloc, _det_algorithm) {}
 
 tname
 matrix<T, Allocator>::~matrix() 
@@ -56,19 +61,9 @@ matrix<T, Allocator>::~matrix()
 }
 
 tname 
-matrix<T, Allocator>::matrix(matrix const& that) :
-            rows_count(that.rows_count),
-            columns_count(that.columns_count),
-            det_algorithm(that.det_algorithm) 
+matrix<T, Allocator>::matrix(matrix const& that) 
 {
-    m_data = m_alloc.allocate(that.rows_count);
-    m_alloc.construt(m_data);
-    //data = new T*[that.rows_count * that.columns_count];
-    for (int i = 0; i < that.rows_count; i++) {
-        for (int j = 0; j < that.columns_count; j++) {
-            m_data[i * that.columns_count + j] = that.data[i * that.columns_count + j];
-        }
-    }
+    *this = that;
 }
 
 //  Private member functions
@@ -123,10 +118,10 @@ matrix<T, Allocator>::create_minor(matrix& future_minor, size_type row, size_typ
 
 //  Public member functions
 
-tname void
-swap(matrix<T, Allocator>& lhs, matrix<T, Allocator>& rhs) 
+template<typename U, typename Alloc> void
+swap(matrix<U, Alloc>& lhs, matrix<U, Alloc>& rhs) 
 {
-    using std::swap;
+	using std::swap;
     swap(lhs.rows_count, rhs.rows_count);
     swap(lhs.columns_count, rhs.columns_count);
     swap(lhs.r_reserved, rhs.r_reserved);
@@ -134,14 +129,45 @@ swap(matrix<T, Allocator>& lhs, matrix<T, Allocator>& rhs)
     swap(lhs.det_is_calculated, rhs.det_is_calculated);
     swap(lhs.determinant, rhs.determinant);
     swap(lhs.det_algorithm, rhs.det_algorithm);
-    swap(lhs.m_data, rhs.m_data);
+   	swap(lhs.m_data, rhs.m_data);
     swap(lhs.m_alloc, rhs.m_alloc);
 }
 
 tname matrix<T, Allocator>& 
-matrix<T, Allocator>::operator=(matrix that) 
+matrix<T, Allocator>::operator=(matrix const& that) 
 {
-    swap(*this, that);
+    //swap(*this, that); // deprecated
+    if (this == &that) 
+        return *this;
+
+    if (!check_size(that)) 
+    {
+        value_type* temp_data = m_alloc.allocate(that.rows_count * that.columns_count);
+#if __cplusplus >= 202002L
+        temp_data = std::construct_at(temp_data);
+        
+#elif __cplusplus >= 201103L
+        m_alloc.construct(temp_data);    
+#else
+        m_alloc.construct(temp_data, value_type());
+#endif
+#if __cplusplus >= 201703L
+        std::destroy_n(m_data, m_capacity);
+#else
+        m_alloc.destroy(m_data);
+#endif
+        m_alloc.deallocate(m_data, m_capacity);
+        m_data = temp_data;
+    }
+
+    std::copy(that.m_data, that.m_data + that.m_size, m_data);
+    rows_count = that.rows_count;
+    columns_count = that.columns_count;
+    m_capacity = that.rows_count * that.columns_count;
+    determinant = that.determinant;
+    det_is_calculated = that.det_is_calculated;
+    det_algorithm = that.det_algorithm; 
+
     return *this;
 }
 
@@ -183,7 +209,7 @@ matrix<T, Allocator>::operator!=(const matrix& that) const
     return !(*this == that);
 }
 
-tname double
+ tname double
 matrix<T, Allocator>::det() const
 {
     if (!is_square()) {
@@ -258,8 +284,8 @@ matrix<T, Allocator>::operator~() const
     return that;
 }
 
-tname std::istream& 
-operator>>(std::istream& is, matrix<T, Allocator> const& that)
+template<typename U, typename Alloc> std::istream& 
+operator>>(std::istream& is, matrix<U, Alloc>& that)
 {
     for (int i = 0; i < that.rows_count; i++) {
         for (int j = 0; j < that.columns_count; j++) {
@@ -269,8 +295,8 @@ operator>>(std::istream& is, matrix<T, Allocator> const& that)
     return is;
 }
 
-tname std::ostream&
-operator<<(std::ostream& os, matrix<T, Allocator> const& that)
+template<typename U, typename Alloc> std::ostream&
+operator<<(std::ostream& os, matrix<U, Alloc> const& that)
 {
     for (int i = 0; i < that.rows_count; i++) {
         for (int j = 0; j < that.columns_count; j++) {
@@ -280,7 +306,19 @@ operator<<(std::ostream& os, matrix<T, Allocator> const& that)
     }
     return os;
 }
+ 
+int main() {
+    matrix<int> A(2, 2);
+    std::string data = "1 1 2 5";
+    std::istringstream sstream(data);
+	sstream >> A;
+    auto determ = A.det();
+    std::cout << determ << std::endl;
+    std::cout << A;
+    return 0;
+} 
 
+/*
 tname const T
 matrix<T, Allocator>::operator()(size_type row, size_type column) const
 {
@@ -322,7 +360,8 @@ matrix<T, Allocator>::get_minor(size_type row_to_delete, size_type column_to_del
     return future_minor;
 }
 
-tname T*
+
+tname value_type*
 matrix<T, Allocator>::operator()(size_type column) 
 {
     if (column >= 0 && column < columns_count) {
@@ -346,4 +385,4 @@ matrix<T, Allocator>::operator[](size_type row)
     else {
         throw std::runtime_error("Cannot return row which is out of bounds");
     }
-}
+}*/

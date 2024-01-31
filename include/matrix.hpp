@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <functional>
 #include <iostream>
+#include <memory>
 
 /*
 class vector {
@@ -44,10 +45,18 @@ public:
 }
 */
 
-template< typename T, typename Allocator = std::allocator<T> >
+/*  Wrapper over determinant calculating algorithm to access private m_data of matrix<T>;
+    Class is needed, because any random double func() doesn't have rights to get private m_data 
+    without friend class. 
+*/
+template <typename T>
+struct det_algorithm;
+
+template <typename T, typename Allocator = std::allocator<T> >
 class matrix {
 public:
 
+    friend struct det_algorithm<T>;
     typedef T value_type;
     typedef Allocator allocator_type;
     typedef std::size_t size_type;
@@ -57,17 +66,21 @@ public:
 
 private:
 
-    allocator_type              m_alloc;
-    value_type*                 m_data;         //use std::alloc_traits::pointer?
-    size_type                   rows_count;
-    size_type                   columns_count;
-    size_type                   m_size;
-    size_type                   m_capacity;     // fill matrix free bytes
-    mutable double              determinant;
-    mutable bool                det_is_calculated   = false;
-    std::function<double()>     det_algorithm       = nullptr;
+    allocator_type      m_alloc;
+    value_type*         m_data;         //use std::alloc_traits::pointer?
+    size_type           rows_count;
+    size_type           columns_count;
+    size_type           m_size;
+    size_type           m_capacity;     // fill matrix free bytes
+    mutable double      determinant;
+    mutable bool        det_is_calculated   = false;
+    //std::function<double()>     det_algorithm       = nullptr; // deprecated, now use special class
+    det_algorithm<T>    m_det_algorithm;
 
-    static double default_det_algorithm();
+    static double __default_det_alg(matrix<T> Matrix);  
+    // maybe create it only in constructor ?
+    static det_algorithm<T> default_det_alg = det_algorithm<T>(__default_det_alg);
+
     /* WIP Possible algorithm for very large matrices*/
     //static double det_Strassen_algorithm();
     bool check_size(matrix const& that) const;
@@ -80,13 +93,12 @@ public:
 
     // Make compile-time constructor for static matrix
 
-    matrix(allocator_type const& alloc = allocator_type(), std::function<double()> _det_algorithm = default_det_algorithm);
-    matrix(size_type const& n, allocator_type const& alloc = allocator_type(), 
-                                                        std::function<double()> _det_algorithm = default_det_algorithm);
+    matrix(allocator_type const& alloc = allocator_type(), det_algorithm<T> _det_alg = default_det_alg);
+    matrix(size_type const& n, allocator_type const& alloc = allocator_type(), det_algorithm<T> _det_alg = default_det_alg);
     matrix(size_type const& _rows_count, size_type const& _columns_count, const_reference value = value_type(),
-        allocator_type const& alloc = allocator_type() , std::function<double()>  _det_algorithm = default_det_algorithm);
+        allocator_type const& alloc = allocator_type(), det_algorithm<T> _det_alg = default_det_alg);
     /* Constructor for square diagonal matrix */
-    matrix(size_type const& used_length, const value_type* array, std::function<double()> _det_algorithm = default_det_algorithm);
+    matrix(size_type const& used_length, const value_type* array, det_algorithm<T> _det_alg = default_det_alg);
     ~matrix();
 
     matrix(matrix const& that);
@@ -164,6 +176,16 @@ public:
     matrix<T, Allocator> get_minor (size_type const& row_to_delete, size_type const& column_to_delete) const;
 };
 
+template <typename T>
+struct det_algorithm {
+    std::function<T (matrix<T>)> __det_function;
+
+    det_algorithm() = delete;
+
+    det_algorithm(std::function<T (matrix<T>)> det_calculating_alg);
+
+    T __calculate_det(matrix<T> Matrix);
+};
 
 /*
 class vector {

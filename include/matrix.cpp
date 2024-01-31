@@ -1,10 +1,25 @@
 #include "matrix.hpp"
 #include <cassert>
+#include <functional>
 #include <iostream>
 #include <memory>
 #include <sstream>
 
 #define tname template <typename T, typename Allocator>
+
+//  struct det_algorithm
+
+template <typename T>
+det_algorithm<T>::det_algorithm(std::function<T (matrix<T>)> det_calculating_alg) :
+    __det_function(det_calculating_alg)
+{}
+
+template <typename T>   
+T 
+det_algorithm<T>::__calculate_det(matrix<T> Matrix)
+{
+    return __det_function(Matrix);
+}
 
 //  Constructors, destructors
 
@@ -307,17 +322,16 @@ operator<<(std::ostream& os, matrix<U, Alloc> const& that)
     return os;
 }
  
+#if 0
 int main() {
     matrix<int> A(2, 2);
     std::string data = "1 1 2 5";
     std::istringstream sstream(data);
 	sstream >> A;
-    auto determ = A.det();
-    std::cout << determ << std::endl;
-    std::cout << A;
+    sstream.str("2 2 3 8");
     return 0;
 } 
-
+#endif
 /*
 tname const T
 matrix<T, Allocator>::operator()(size_type row, size_type column) const

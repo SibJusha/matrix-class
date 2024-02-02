@@ -101,27 +101,27 @@ protected:
 
 public:
 
-    matrix_no_det(const allocator_type& alloc = allocator_type()) :
+    virtual matrix_no_det(const allocator_type& alloc = allocator_type()) :
         _Base_Arr_matrix<T, Allocator>(alloc), rows_count(0), columns_count(0)
     {}
 
-    matrix_no_det(const size_type& _rows_count, const size_type& _columns_count, const_reference value = value_type(),
-        const allocator_type& alloc = allocator_type()) :
+    virtual matrix_no_det(const size_type& _rows_count, const size_type& _columns_count, 
+        const_reference value = value_type(), const allocator_type& alloc = allocator_type()) :
             _Base_Arr_matrix<T, Allocator>(_rows_count * _columns_count, value, alloc), 
             rows_count(_rows_count), columns_count(_columns_count)
     {}
 
-    matrix_no_det(const size_type& count, const_reference value = value_type(), 
+    virtual matrix_no_det(const size_type& count, const_reference value = value_type(), 
         const allocator_type& alloc = allocator_type()) :
             matrix_no_det(count, count, value, alloc)
     {}
 
-    matrix_no_det(matrix_no_det&& other, const allocator_type& alloc = allocator_type()) :
+    virtual matrix_no_det(matrix_no_det&& other, const allocator_type& alloc = allocator_type()) :
         _Base_Arr_matrix<T, Allocator>(std::move(other), alloc),
         rows_count(other.rows_count), columns_count(other.columns_count)
     {} 
 
-    matrix_no_det(matrix_no_det const& that) 
+    virtual matrix_no_det(matrix_no_det const& that) 
     {
         *this = that;
     }
@@ -416,7 +416,7 @@ protected:
 /*  Wrapper over determinant calculating algorithm to access private m_data of matrix<T>;
     Class is needed, because any random { double func() } doesn't have rights to access private m_data 
     without an usage of getters.
-*//*
+*/
 template <typename Det>
 class determinant_algorithm;
 
@@ -432,25 +432,75 @@ public:
     typedef std::ptrdiff_t difference_type;
     typedef value_type& reference;
     typedef value_type const& const_reference;
+    typedef determinant_algorithm _d_alg;
 
 private:
 
-    mutable det_type                determinant;
-    mutable bool                    det_is_calculated   = false;
-    determinant_algorithm<det_type>   m_det_algorithm;
+    mutable det_type    determinant;
+    mutable bool        det_is_calculated = false;
+    _d_alg<det_type>    m_det_algorithm;
 
-    static double __default_det_alg(matrix<T> Matrix);  
-    // maybe create it only in constructor ?
-    static det_algorithm<double> default_det_alg = det_algorithm<double>(__default_det_alg);
+public:
+
+    matrix(const allocator_type& alloc = allocator_type(), const _d_alg& det_alg = _d_alg()) :
+        matrix_no_det(alloc), rows_count(0), columns_count(0), m_det_algorithm(det_alg)
+    {}
+
+    matrix(const size_type& _rows_count, const size_type& _columns_count, const_reference value = value_type(), 
+        const allocator_type& alloc = allocator_type(), const _d_alg& det_alg = _d_alg()) :
+            matrix_no_det(_rows_count, _columns_count, value, alloc), 
+            rows_count(_rows_count), columns_count(_columns_count), m_det_algorithm(det_alg)
+    {}
+
+    matrix(const size_type& count, const_reference value = value_type(), const allocator_type& alloc = allocator_type(),
+        const _d_alg& det_alg = _d_alg()) :
+            matrix_no_det(count, value, alloc), m_det_algorithm(det_alg)
+    {}
+
+    matrix(matrix&& other, const allocator_type& alloc = allocator_type(), const _d_alg& det_alg = _d_alg()) :
+        matrix_no_det(std::move(other), alloc), m_det_algorithm(det_alg)
+    {} 
+
+    matrix(matrix const& that) 
+    {
+        *this = that;
+    }
+
+    det_type
+    det() const
+    {
+        if (!is_square()) {
+            throw std::runtime_error("det() is only for square matrices");
+        }
+        if (!m_det_algorithm) {
+            throw std::runtime_error("det() algorithm is not set for matrix");
+        }
+        if (det_is_calculated) { 
+            return determinant;
+        }
+        determinant = m_det_algorithm._calculate_det(*this);
+        det_is_calculated = true;
+        return determinant;
+    }
+
 };
 
 template <typename T>
-struct det_algorithm {
-    std::function<T (matrix<T>)> __det_function;
+class determinant_algorithm {
+    std::function<T (matrix<T>&)> _det_function;
 
-    det_algorithm() = delete;
+    static double __default_det_alg(matrix<T> Matrix);  
 
-    det_algorithm(std::function<T (matrix<T>)> det_calculating_alg);
+public:
+    determinant_algorithm() : determinant_algorithm(__default_det_alg());
 
-    T __calculate_det(matrix<T> Matrix);
-};*/
+    determinant_algorithm(std::function<T (matrix<T>&)> det_calculating_alg) 
+    {
+        _det_function = std::bind(det_calculating_alg, std::placeholders::_1);
+    }
+
+    T _calculate_det(matrix<T>& Matrix)
+    {
+        return _det_function(Matrix);
+    }
+};
